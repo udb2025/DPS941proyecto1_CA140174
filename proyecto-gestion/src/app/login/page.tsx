@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/services/authService";
+import { getUserRole } from "@/services/userService";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -10,12 +11,24 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
-      console.log("Redirigiendo a dashboard..."); 
-      router.push("/dashboard")
+      const userCredential = await login(email, password); // Login devuelve el objeto userCredential
+      const user = userCredential.user; // Extraemos el usuario autenticado
+      const role = await getUserRole(user.uid); // Obtenemos el rol desde Firestore
+      if (role === "Administrador") {
+        console.error("redirigiendo a admin");
+        router.push("/admin");
+      } else if (role === "Gerente") {
+        router.push("/gerente");
+      } else if (role === "Miembro") {
+        router.push("/miembro");
+      } else {
+        setError("No tiene un rol asignado.");
+      }
+      
     } catch (err) {
       console.error("Error en login:", error);
       setError("Error al iniciar sesión. Verifica tus credenciales.");

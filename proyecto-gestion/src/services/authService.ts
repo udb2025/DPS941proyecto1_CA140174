@@ -8,7 +8,7 @@ export async function login(email: string, password: string) {
     console.log("Usuario autenticado:", userCredential.user);  
     return userCredential;
   } catch (error) {
-    console.error("Error en login:", error);
+   
     throw error;
   }
 }
@@ -16,8 +16,8 @@ export async function login(email: string, password: string) {
 export const logout = async () => {
   try {
     await signOut(auth);
-    console.log("Sesión cerrada correctamente");
+    
   } catch (error) {
-    console.error("Error al cerrar sesión", error);
+    
   }
 };
