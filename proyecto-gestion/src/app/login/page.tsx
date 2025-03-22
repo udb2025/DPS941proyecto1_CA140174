@@ -1,17 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect,useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/services/authService";
 import { getUserRole } from "@/services/userService";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase/firebaseConfig";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const [isMaintenance, setIsMaintenance] = useState(false);
 
+  useEffect(() => {
+    const checkMaintenance = async () => {
+      const docRef = doc(db, "config", "system");
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists() && docSnap.data().isMaintenance) {
+        setIsMaintenance(true);
+      }
+    };
+    checkMaintenance();
+  }, []); 
 
+  if (isMaintenance) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <h1 className="text-2xl font-bold text-red-600">
+          🚧 El sistema está en mantenimiento. Vuelve más tarde. 🚧
+        </h1>
+      </div>
+    );
+  }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -19,7 +41,7 @@ export default function LoginPage() {
       const user = userCredential.user; // Extraemos el usuario autenticado
       const role = await getUserRole(user.uid); // Obtenemos el rol desde Firestore
       if (role === "Administrador") {
-        console.error("redirigiendo a admin");
+        
         router.push("/admin");
       } else if (role === "Gerente") {
         router.push("/gerente");
@@ -30,10 +52,12 @@ export default function LoginPage() {
       }
       
     } catch (err) {
-      console.error("Error en login:", error);
+      
       setError("Error al iniciar sesión. Verifica tus credenciales.");
     }
   };
+
+  
 
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
