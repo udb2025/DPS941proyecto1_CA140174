@@ -3,39 +3,43 @@
 import { useState, useEffect } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebaseConfig"; // Asegúrate de importar correctamente Firestore
+import ConfirmModal from "@/components/ui/ConfirmModal";
+const AdminPanel = () => {  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
+  
 
-const AdminPanel = () => {
-  const [isMaintenance, setIsMaintenance] = useState(false);
+   
 
-  useEffect(() => {
-    const fetchConfig = async () => {
-      const docRef = doc(db, "config", "system");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setIsMaintenance(docSnap.data().isMaintenance);
-      }
-    };
-    fetchConfig();
-  }, []);
-
-  const toggleMaintenance = async () => {
-    const newState = !isMaintenance;
-    setIsMaintenance(newState);
-    await updateDoc(doc(db, "config", "system"), { isMaintenance: newState });
+  const handleToggle = () => {
+    setIsModalOpen(true);
   };
-
+  const handleConfirm = () => {    
+    setIsChecked(!isChecked); // Cambiar estado
+    const newState = !isChecked;     
+    updateDoc(doc(db, "config", "system"), { isMaintenance: newState });
+    setIsModalOpen(false);
+  };
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-900">Configuración del Sistema</h1>
-      <div className="flex items-center">
-        <label className="mr-2">Modo Mantenimiento:</label>
+    <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-md">
+     <h1 className="text-xl font-bold text-gray-900 dark:text-white">Panel de Administración</h1>
+      <div className="mt-4 flex items-center">
+      <label className="mr-2 text-gray-700 dark:text-gray-300">Modo Mantenimiento:</label>
         <input
           type="checkbox"
-          checked={isMaintenance}
-          onChange={toggleMaintenance}
-          className="w-6 h-6"
+          checked={isChecked}
+          onChange={handleToggle}
+          className="toggle-checkbox"
         />
       </div>
+       {/* Modal de confirmación */}
+       <ConfirmModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConfirm}
+        title="Confirmar Cambio"
+        message="¿Estás seguro de cambiar el estado del sistema?"
+      />
     </div>
   );
 };
