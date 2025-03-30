@@ -5,7 +5,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } f
 export async function login(email: string, password: string) {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log("Usuario autenticado:", userCredential.user);  
+    
     return userCredential;
   } catch (error) {
    
