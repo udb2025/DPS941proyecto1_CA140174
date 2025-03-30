@@ -45,12 +45,6 @@ export default function DashboardPage() {
             <FolderKanban className="inline-block w-4 h-4 mr-1 user-cog" />Gestionar Proyectos
           </button>
 
-          <button
-            onClick={() => handleNavigation("/admin/panel")}
-            className="w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-700"
-          >
-            <ScrollText  className="inline-block w-4 h-4 mr-1 user-cog" />Asignar tareas
-          </button>
           </div>
           <button
             onClick={handleLogout}
