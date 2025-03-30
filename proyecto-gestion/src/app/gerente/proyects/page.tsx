@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, updateDoc, doc, setDoc,deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebaseConfig";
 import { Plus, Check, X, Pencil,Trash2 } from "lucide-react";
-
+interface Task {
+  id: string;
+  name: string;
+  description: string;
+  priority: "Alta" | "Media" | "Baja";
+}
 interface Project {
   id: string;
   name: string;
@@ -13,6 +18,7 @@ interface Project {
   endDate: string;
   status: string;
   progress: number;
+  tasks: Task[];
 }
 
 export default function ProjectsPage() {
@@ -24,6 +30,7 @@ export default function ProjectsPage() {
     endDate: "",
     status: "Pendiente",
     progress: 0,
+    tasks: [],
   });
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [tempProjectData, setTempProjectData] = useState<Partial<Project> | null>(null);
@@ -111,6 +118,30 @@ export default function ProjectsPage() {
     setShowDeleteModal(null);
   };
 
+  const handleAddTask = async (projectId: string) => {
+    const taskName = prompt("Ingrese el nombre de la tarea:");
+    const taskDescription = prompt("Ingrese la descripción de la tarea:");
+    const taskPriority = prompt("Ingrese la prioridad (Alta, Media, Baja):");
+
+    if (!taskName || !taskDescription || !taskPriority) return;
+
+    const newTask: Task = {
+      id: Math.random().toString(36).substring(2, 9),
+      name: taskName,
+      description: taskDescription,
+      priority: taskPriority as "Alta" | "Media" | "Baja",
+    };
+
+    const updatedProjects = projects.map((project) =>
+      project.id === projectId
+        ? { ...project, tasks: [...project.tasks, newTask] }
+        : project
+    );
+    setProjects(updatedProjects);
+
+    const projectRef = doc(db, "projects", projectId);
+    await updateDoc(projectRef, { tasks: updatedProjects.find(p => p.id === projectId)?.tasks });
+  };
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-900">Gestión de Proyectos</h1>
@@ -133,6 +164,7 @@ export default function ProjectsPage() {
             <th className="border border-gray-300 p-2">Fecha Inicio</th>
             <th className="border border-gray-300 p-2">Fecha Fin</th>
             <th className="border border-gray-300 p-2">Progreso</th>
+            <th className="border border-gray-300 p-2">Tareas</th>
             <th className="border border-gray-300 p-2">Acciones</th>
           </tr>
         </thead>
@@ -141,7 +173,7 @@ export default function ProjectsPage() {
             <tr key={project.id} className={`text-center ${editingProjectId === project.id ? "border-4 border-red-500" : ""}`}>
               <td className="border border-gray-300 p-2">
                 {editingProjectId === project.id ? (
-                  <input
+                  <input class="border-2 border-solid"
                     value={tempProjectData?.name || ""}
                     onChange={(e) => setTempProjectData({ ...tempProjectData!, name: e.target.value })}
                   />
@@ -150,20 +182,44 @@ export default function ProjectsPage() {
                 )}
               </td>
               <td className="border border-gray-300 p-2">                {editingProjectId === project.id ? (
-                  <input
+                  <input class="border-2 border-solid"
                     value={tempProjectData?.description || ""}
                     onChange={(e) => setTempProjectData({ ...tempProjectData!, description: e.target.value })}
                   />
                 ) : (
                   project.description
                 )}</td>
+
               <td className="border border-gray-300 p-2">{project.startDate}</td>
               <td className="border border-gray-300 p-2">{project.endDate}</td>
               <td className="bborder border-gray-300 p-2">
-                <div className="w-full bg-gray-200 rounded-full h-2">
+              {editingProjectId === project.id ? (
+                  <input class="border-2 border-solid"
+                    value={tempProjectData?.progress || ""}
+                    onChange={(e) => setTempProjectData({ ...tempProjectData!, progress : e.target.value })}
+                  />
+                ) : (
+                  <div className="w-full bg-gray-200 rounded-full h-2">
                   <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${project.progress}%` }}></div>
                 </div>
+                )}
+                
               </td>
+              <td className="border border-gray-300 p-2">
+                <ul>
+                  {project.tasks.map((task) => (
+                    <li key={task.id} className="border p-2 m-1 rounded bg-gray-100">
+                      <strong>{task.name}</strong> - {task.description} ({task.priority})
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => handleAddTask(project.id)}
+                  className="bg-blue-600 text-white px-3 py-1 rounded mt-2"
+                >
+                  <Plus className="inline-block w-4 h-4 mr-1" />Añadir Tarea
+                </button>
+              </td> 
               <td className="border border-gray-300 p-2">
                 {editingProjectId === project.id ? (
                   <>
