@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { logout } from "@/services/authService";
 import { FolderKanban  } from "lucide-react";
-import { ScrollText  } from 'lucide-react'; 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
